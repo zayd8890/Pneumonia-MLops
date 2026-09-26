@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyTorch checkpoints and models
+*.pt
+*.ckpt
+*.bin
+*.onnx
+saved_models/
+checkpoints/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data and dataset files
+data/raw/
+data/processed/
+*.csv
+*.json
+!configs/*.yaml
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & outputs
+runs/
+logs/
+results/
+outputs/
+wandb/
+mlruns/
+
+# MLflow
+mlflow.db
+mlruns/
+mlartifacts/
