@@ -1,0 +1,5 @@
+outs:
+- md5: d78d45fa94f073cce0a65102d3e96a9c
+  size: 28445152
+  hash: md5
+  path: densenet121_30epoch_scratch.pth

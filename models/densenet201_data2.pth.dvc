@@ -1,0 +1,5 @@
+outs:
+- md5: 583d76876d585412d9f30c877b83dc90
+  size: 73729249
+  hash: md5
+  path: densenet201_data2.pth
