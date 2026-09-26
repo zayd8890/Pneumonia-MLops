@@ -1,0 +1,25 @@
+# PyTorch & Torchvision
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Configuration & Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+
+# Numerical & Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+pillow>=9.5.0
+
+# Machine Learning & Evaluation Metrics
+scikit-learn>=1.2.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Testing
+pytest>=7.3.0
+
+# Experiment Tracking
+mlflow>=2.10.0
