@@ -1,0 +1,23 @@
+image-classification-mlops/
+│
+├── data/
+├── notebooks/
+├── src/
+│   ├── data/
+│   ├── models/
+│   ├── training/
+│   ├── evaluation/
+│   └── inference/
+│
+├── tests/
+│
+├── configs/
+│   └── config.yaml
+│
+├── train.py
+├── evaluate.py
+├── predict.py
+│
+├── requirements.txt
+├── README.md
+└── .gitignore
