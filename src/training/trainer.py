@@ -4,7 +4,7 @@ Training pipeline and Trainer class for DenseNet and ResNet.
 
 import os
 import json
-from typing import Optional, Dict, Tuple, Any
+from typing import Optional, Dict, Tuple
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader

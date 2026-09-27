@@ -4,7 +4,7 @@ Preserves identical class names, attribute names, and module structure
 to ensure compatibility with existing pre-trained .pth checkpoint files.
 """
 
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -68,10 +68,11 @@ class ResNet(nn.Module):
     def __init__(
         self,
         block: nn.Module = ResidualBlock,
-        layers: List[int] = [2, 2, 2, 2],
+        layers: Optional[List[int]] = None,
         num_classes: int = 2,
     ):
         super(ResNet, self).__init__()
+        layers = layers if layers is not None else [2, 2, 2, 2]
         self.in_channels = 64
 
         # Initial Convolution + BatchNorm + ReLU + MaxPool

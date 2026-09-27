@@ -2,19 +2,18 @@
 Dataset definitions and data transforms matching the project notebooks.
 """
 
-import os
 from typing import Optional, List, Tuple, Union, Dict
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms, datasets
+from torchvision import transforms
 from PIL import Image
 import pandas as pd
 
 
 def get_transforms(
     image_size: int = 224,
-    mean: List[float] = [0.485, 0.456, 0.406],
-    std: List[float] = [0.229, 0.224, 0.225],
+    mean: Optional[List[float]] = None,
+    std: Optional[List[float]] = None,
     split: str = "train",
 ) -> transforms.Compose:
     """
@@ -23,13 +22,15 @@ def get_transforms(
 
     Args:
         image_size: Target image dimension (default: 224).
-        mean: Normalization channel means.
-        std: Normalization channel standard deviations.
+        mean: Normalization channel means (default: ImageNet mean).
+        std: Normalization channel standard deviations (default: ImageNet std).
         split: One of 'train', 'val', or 'test'.
 
     Returns:
         torchvision.transforms.Compose pipeline.
     """
+    mean = mean if mean is not None else [0.485, 0.456, 0.406]
+    std = std if std is not None else [0.229, 0.224, 0.225]
     if split == "train":
         return transforms.Compose([
             transforms.RandomResizedCrop(image_size),

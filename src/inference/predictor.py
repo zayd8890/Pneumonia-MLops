@@ -26,10 +26,12 @@ class Predictor:
         num_classes: int = 2,
         class_names: Optional[List[str]] = None,
         image_size: int = 224,
-        mean: List[float] = [0.485, 0.456, 0.406],
-        std: List[float] = [0.229, 0.224, 0.225],
+        mean: Optional[List[float]] = None,
+        std: Optional[List[float]] = None,
         device: Optional[Union[str, torch.device]] = None,
     ):
+        mean = mean if mean is not None else [0.485, 0.456, 0.406]
+        std = std if std is not None else [0.229, 0.224, 0.225]
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         elif isinstance(device, str):

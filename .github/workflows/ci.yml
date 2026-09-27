@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Run unit tests
+        run: |
+          pip install pytest
+          pytest tests/ -v
+
+  smoke-pipeline:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate dummy dataset
+        run: python scripts/make_dummy_data.py --out_dir dummy_data --per_class 6
+
+      - name: Train (1 epoch, CPU)
+        run: >
+          python train.py --model resnet18 --data_dir dummy_data --epochs 1
+          --batch_size 4 --num_workers 0 --device cpu --save_dir /tmp/models --no_mlflow
+
+      - name: Evaluate
+        run: >
+          python evaluate.py --model resnet18 --weights /tmp/models/resnet18_best.pth
+          --data_dir dummy_data --output_dir /tmp/results --num_workers 0 --device cpu --no_mlflow

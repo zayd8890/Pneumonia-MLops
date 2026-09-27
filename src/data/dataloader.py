@@ -4,7 +4,7 @@ Supports ImageFolder folder layout (train/val/test splits).
 """
 
 import os
-from typing import Tuple, Optional, Dict, List
+from typing import Tuple, Optional, List
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -18,8 +18,8 @@ def get_dataloaders(
     test_dir: Optional[str] = None,
     batch_size: int = 32,
     image_size: int = 224,
-    mean: List[float] = [0.485, 0.456, 0.406],
-    std: List[float] = [0.229, 0.224, 0.225],
+    mean: Optional[List[float]] = None,
+    std: Optional[List[float]] = None,
     num_workers: int = 4,
     pin_memory: bool = True,
 ) -> Tuple[Optional[DataLoader], Optional[DataLoader], Optional[DataLoader], List[str]]:
@@ -33,14 +33,16 @@ def get_dataloaders(
         test_dir: Explicit path to test folder.
         batch_size: Number of images per batch (default: 32).
         image_size: Input resolution (default: 224).
-        mean: Normalization channel means.
-        std: Normalization channel standard deviations.
+        mean: Normalization channel means (default: ImageNet mean).
+        std: Normalization channel standard deviations (default: ImageNet std).
         num_workers: DataLoader worker count.
         pin_memory: Enable pinned memory for faster GPU transfer.
 
     Returns:
         tuple of (train_loader, val_loader, test_loader, class_names)
     """
+    mean = mean if mean is not None else [0.485, 0.456, 0.406]
+    std = std if std is not None else [0.229, 0.224, 0.225]
     # Resolve directory paths
     if data_dir:
         if not train_dir:

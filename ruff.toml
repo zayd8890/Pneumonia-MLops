@@ -1,0 +1,21 @@
+# Ruff configuration for CI.
+#
+# Starter rule set: catch real bugs (unused imports/vars, undefined names, bare
+# excepts, mutable default args, etc.) without failing on style-only issues in the
+# existing codebase (e.g. UP006 'Dict' vs 'dict'). Widen this as the codebase is
+# cleaned up - see https://docs.astral.sh/ruff/rules/ for the full list.
+
+line-length = 120
+exclude = ["notebooks", ".dvc", "mlruns", "mlartifacts"]
+
+[lint]
+# E/F = pycodestyle errors + pyflakes (real bugs: unused imports, undefined names,
+#       redefinitions, etc.). B = flake8-bugbear (common gotchas: mutable defaults,
+#       bare except, unused loop variables, etc.).
+select = ["E", "F", "B"]
+ignore = [
+    "E501",  # line too long - many f-string/print lines exceed 120; not a bug
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["F401"]  # unused imports (e.g. pytest) commonly kept in test files

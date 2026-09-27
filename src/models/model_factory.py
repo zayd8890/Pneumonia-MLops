@@ -4,12 +4,16 @@ Ensures seamless loading of pre-trained checkpoint weights.
 """
 
 import os
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union
 import torch
 import torch.nn as nn
 
-from src.models.densenet import DenseNet, build_densenet, model_parameters
-from src.models.resnet import ResNet, build_resnet, ResNet18, resnet_configurations
+from src.models.densenet import build_densenet, model_parameters
+from src.models.resnet import build_resnet, resnet_configurations
+from src.models.densenet_bottleneck import densenet121_bottleneck
+
+# Extra architectures (different layer naming than src/models/densenet.py)
+EXTRA_ARCHITECTURES = {"densenet121_bottleneck": densenet121_bottleneck}
 
 
 def get_model(
@@ -34,8 +38,12 @@ def get_model(
     """
     arch = architecture.lower().strip()
 
+    # Notebook 'Copy_of_Untitled0' DenseNet (bottleneck layout)
+    if arch in EXTRA_ARCHITECTURES:
+        model = EXTRA_ARCHITECTURES[arch](num_classes=num_classes)
+
     # DenseNet family
-    if "dense" in arch:
+    elif "dense" in arch:
         variant = arch if arch in model_parameters else "densenet201"
         model = build_densenet(variant=variant, num_classes=num_classes, in_channels=in_channels)
 
