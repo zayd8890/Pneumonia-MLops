@@ -48,3 +48,6 @@ mlruns/
 mlflow.db
 mlruns/
 mlartifacts/
+
+# Personal scratch notes - never tracked
+must_check.md

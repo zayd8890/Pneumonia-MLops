@@ -1,0 +1,32 @@
+# Data and large artifacts (model is pulled from the MLflow Registry at container startup)
+data/
+models/
+mlruns/
+mlartifacts/
+results/
+dummy_data/
+notebooks/
+
+# VCS / DVC
+.git/
+.dvc/
+.dvcignore
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# MLflow local db (Compose points at Postgres instead)
+mlflow.db
+
+# Misc
+.github/
+scripts/
+tests/
+README.md
+*.md
+*.txt
+!requirements.txt
