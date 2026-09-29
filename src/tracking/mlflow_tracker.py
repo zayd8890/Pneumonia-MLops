@@ -39,7 +39,9 @@ class Tracker:
         mcfg = cfg.get("mlflow", {}) or {}
         return cls(
             enabled=mcfg.get("enabled", True) and not disabled,
-            tracking_uri=mcfg.get("tracking_uri", "sqlite:///mlflow.db"),
+            # MLFLOW_TRACKING_URI env var wins if set (e.g. pointing scripts at a
+            # Docker/Postgres-backed server), else fall back to the config file.
+            tracking_uri=os.environ.get("MLFLOW_TRACKING_URI", mcfg.get("tracking_uri", "sqlite:///mlflow.db")),
             experiment_name=mcfg.get("experiment_name", "pneumonia-classification"),
         )
 
