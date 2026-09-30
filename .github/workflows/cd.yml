@@ -12,7 +12,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}   # -> ghcr.io/zayd8890/pneumonia-mlops
 
 jobs:
   build-and-push:
@@ -28,6 +27,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Compute lowercase image name
+        # Docker/GHCR require lowercase repo names; github.repository preserves the
+        # repo's actual case (zayd8890/Pneumonia-MLops), so it can't be used directly.
+        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
