@@ -1,0 +1,53 @@
+# MLflow tracking/registry server. Same image as Dockerfile.mlflow (built locally and
+# imported into k3d - see README note in this dir / the deploy steps).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mlflow-artifacts
+  namespace: pneumonia-mlops
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  namespace: pneumonia-mlops
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: mlflow}
+  template:
+    metadata:
+      labels: {app: mlflow}
+    spec:
+      containers:
+        - name: mlflow
+          image: pneumonia-mlflow:local
+          imagePullPolicy: IfNotPresent   # image is imported locally via `k3d image import`, not pulled from a registry
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: artifacts
+              mountPath: /mlartifacts
+          readinessProbe:
+            httpGet: {path: /health, port: 5000}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim: {claimName: mlflow-artifacts}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: pneumonia-mlops
+spec:
+  selector: {app: mlflow}
+  ports:
+    - port: 5000
+      targetPort: 5000

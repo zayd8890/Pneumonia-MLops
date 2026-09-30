@@ -1,0 +1,5 @@
+# Dedicated namespace for the whole stack, separate from 'default'.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pneumonia-mlops
