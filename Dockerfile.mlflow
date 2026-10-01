@@ -5,11 +5,9 @@ FROM python:3.11-slim
 
 RUN pip install --no-cache-dir mlflow>=2.10.0 psycopg2-binary>=2.9.0
 
+COPY mlflow-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 5000
 
-CMD ["mlflow", "server", \
-     "--host", "0.0.0.0", "--port", "5000", \
-     "--backend-store-uri", "postgresql+psycopg2://mlflow:mlflow@postgres:5432/mlflow", \
-     "--default-artifact-root", "mlflow-artifacts:/", \
-     "--artifacts-destination", "/mlartifacts", \
-     "--allowed-hosts", "mlflow:5000,localhost:5000,127.0.0.1:5000,localhost:5001,127.0.0.1:5001,mlflow,localhost,127.0.0.1"]
+ENTRYPOINT ["/entrypoint.sh"]
