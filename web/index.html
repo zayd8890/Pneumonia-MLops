@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pneumonia X-Ray Classifier</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; color: #222; }
+  h1 { font-size: 1.4rem; }
+  #drop { border: 2px dashed #999; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; }
+  #drop.over { background: #f0f8ff; border-color: #4a90d9; }
+  #preview { max-width: 100%; margin-top: 16px; border-radius: 8px; display: none; }
+  button { margin-top: 16px; padding: 10px 20px; font-size: 1rem; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #result { margin-top: 20px; padding: 16px; border-radius: 8px; display: none; }
+  #result.normal { background: #e6f7e6; }
+  #result.pneumonia { background: #fde8e8; }
+  .label { font-size: 1.3rem; font-weight: bold; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.9rem; }
+  .bar-bg { flex: 1; background: #ddd; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #4a90d9; }
+  #error { color: #b00; margin-top: 12px; display: none; }
+</style>
+</head>
+<body>
+  <h1>Pneumonia X-Ray Classifier</h1>
+  <p>Upload a chest X-ray image to get a prediction from the model.</p>
+
+  <div id="drop">Click to choose an image, or drag one here</div>
+  <input type="file" id="file" accept="image/*" style="display:none">
+  <img id="preview" alt="preview">
+  <br>
+  <button id="submit" disabled>Predict</button>
+
+  <div id="error"></div>
+  <div id="result">
+    <div class="label" id="label"></div>
+    <div id="model-version" style="font-size:0.8rem;color:#666;"></div>
+    <div id="bars"></div>
+  </div>
+
+<script>
+  const drop = document.getElementById('drop');
+  const fileInput = document.getElementById('file');
+  const preview = document.getElementById('preview');
+  const submitBtn = document.getElementById('submit');
+  const errorBox = document.getElementById('error');
+  const resultBox = document.getElementById('result');
+  let selectedFile = null;
+
+  drop.addEventListener('click', () => fileInput.click());
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('over');
+    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) setFile(fileInput.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    submitBtn.disabled = false;
+    resultBox.style.display = 'none';
+    errorBox.style.display = 'none';
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Predicting...';
+    errorBox.style.display = 'none';
+    resultBox.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const resp = await fetch('/api/predict', { method: 'POST', body: formData });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body.detail || `Request failed (${resp.status})`);
+      }
+      const data = await resp.json();
+      showResult(data);
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Predict';
+    }
+  });
+
+  function showResult(data) {
+    resultBox.className = data.predicted_label === 'PNEUMONIA' ? 'pneumonia' : 'normal';
+    resultBox.style.display = 'block';
+    document.getElementById('label').textContent =
+      `${data.predicted_label} (${(data.confidence * 100).toFixed(1)}%)`;
+    document.getElementById('model-version').textContent = `model: ${data.model_version}`;
+
+    const bars = document.getElementById('bars');
+    bars.innerHTML = '';
+    for (const [cls, prob] of Object.entries(data.probabilities)) {
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = `
+        <span style="width:90px">${cls}</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:${(prob * 100).toFixed(1)}%"></div></div>
+        <span>${(prob * 100).toFixed(1)}%</span>`;
+      bars.appendChild(row);
+    }
+  }
+</script>
+</body>
+</html>

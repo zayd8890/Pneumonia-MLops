@@ -2,6 +2,7 @@
 # plus Prometheus + Grafana for monitoring.
 #
 # Run:       docker compose up --build
+# Web app:    https://localhost  (self-signed cert - browser will warn, that's expected)
 # API:       http://localhost:8000/docs
 # MLflow:    http://localhost:5001
 # Prometheus: http://localhost:9090
@@ -79,6 +80,17 @@ services:
       - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
 
 volumes:
   postgres_data:
