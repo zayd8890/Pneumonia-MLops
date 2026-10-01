@@ -1,0 +1,9 @@
+# Tells Grafana to auto-load any dashboard JSON in this folder on startup.
+apiVersion: 1
+
+providers:
+  - name: "Pneumonia API"
+    folder: ""
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards

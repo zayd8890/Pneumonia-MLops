@@ -24,6 +24,7 @@ data/processed/
 *.csv
 *.json
 !configs/*.yaml
+!monitoring/**/*.json
 
 # IDEs and editors
 .vscode/

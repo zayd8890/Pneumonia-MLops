@@ -15,16 +15,24 @@ The model is loaded once at startup (see app/model_loader.py), not per-request.
 
 import io
 from contextlib import asynccontextmanager
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
+from prometheus_client import Counter
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
 from app.model_loader import load_serving_model
 
+# Per-class prediction counter, for the Grafana dashboard (class balance drift over
+# time is a useful early signal even before real drift-detection tooling exists).
+PREDICTIONS_TOTAL = Counter(
+    "pneumonia_predictions_total", "Total predictions served, by predicted label.", ["predicted_label"]
+)
+
 # Populated at startup; see lifespan() below.
-state: Dict[str, object] = {"predictor": None, "model_version": None}
+state: Dict[str, Any] = {"predictor": None, "model_version": None}
 
 
 @asynccontextmanager
@@ -47,6 +55,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Exposes GET /metrics (request counts, latency, in-progress requests by path/status)
+# for Prometheus to scrape. Excluded from the OpenAPI schema since it's not an API route.
+Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 
 class HealthResponse(BaseModel):
@@ -110,7 +122,8 @@ async def predict(file: UploadFile = File(...)) -> PredictionResponse:  # noqa: 
     predictor = _require_predictor()
     image = await _read_image(file)
     result = predictor.predict_image(image)
-    return PredictionResponse(filename=file.filename, model_version=state["model_version"], **result)
+    PREDICTIONS_TOTAL.labels(predicted_label=result["predicted_label"]).inc()
+    return PredictionResponse(filename=file.filename or "upload", model_version=state["model_version"], **result)
 
 
 @app.post("/predict/batch", response_model=BatchPredictionResponse)
@@ -120,5 +133,6 @@ async def predict_batch(files: List[UploadFile] = File(...)) -> BatchPredictionR
     for upload in files:
         image = await _read_image(upload)
         result = predictor.predict_image(image)
-        results.append(PredictionResponse(filename=upload.filename, model_version=state["model_version"], **result))
+        PREDICTIONS_TOTAL.labels(predicted_label=result["predicted_label"]).inc()
+        results.append(PredictionResponse(filename=upload.filename or "upload", model_version=state["model_version"], **result))
     return BatchPredictionResponse(results=results)

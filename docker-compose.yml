@@ -1,8 +1,11 @@
-# Local stack: Postgres (MLflow metadata) + MLflow tracking/registry server + the API.
+# Local stack: Postgres (MLflow metadata) + MLflow tracking/registry server + the API,
+# plus Prometheus + Grafana for monitoring.
 #
-# Run:    docker compose up --build
-# API:    http://localhost:8000/docs
-# MLflow: http://localhost:5001
+# Run:       docker compose up --build
+# API:       http://localhost:8000/docs
+# MLflow:    http://localhost:5001
+# Prometheus: http://localhost:9090
+# Grafana:    http://localhost:3000  (login: admin / admin, dashboard auto-loaded)
 #
 # select_model.py / train.py / evaluate.py run outside Compose (on your machine, with a
 # GPU) - point them at the server with:  set MLFLOW_TRACKING_URI=http://localhost:5001
@@ -47,7 +50,38 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
     ports:
       - "8000:8000"
+    volumes:
+      # Registered model versions store a raw filesystem path (e.g. /mlartifacts/...)
+      # pointing inside the mlflow container's artifact root - api needs the same
+      # volume mounted at the same path to read those files directly.
+      - mlflow_artifacts:/mlartifacts:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres_data:
   mlflow_artifacts:
+  prometheus_data:
+  grafana_data:
