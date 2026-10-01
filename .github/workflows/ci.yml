@@ -27,6 +27,11 @@ jobs:
           pip install ruff
           ruff check .
 
+      - name: Type check with mypy
+        run: |
+          pip install mypy types-PyYAML pandas-stubs types-tqdm
+          mypy
+
       - name: Run unit tests
         run: |
           pip install pytest

@@ -43,7 +43,7 @@ from src.tracking.mlflow_tracker import Tracker
 try:
     import mlflow
 except ImportError:
-    mlflow = None
+    mlflow = None  # type: ignore[assignment]  # tracking is an optional dependency
 
 REGISTERED_MODEL_NAME = "pneumonia-classifier"
 CHAMPION_ALIAS = "champion"
@@ -95,6 +95,13 @@ def parse_args(argv=None) -> argparse.Namespace:
         action="store_true",
         help="Also evaluate on augmented copies (is_augmented == 1). Default: originals only.",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Evaluate only the first N images (after the originals-only filter). "
+             "For fast debugging/wiring checks - NOT for a real ranking decision.",
+    )
     parser.add_argument("--no_register", action="store_true", help="Rank only; do not register a champion.")
     parser.add_argument("--no_mlflow", action="store_true", help="Disable MLflow tracking (implies --no_register).")
     return parser.parse_args(argv)
@@ -130,7 +137,9 @@ def infer_architecture(weights_path: str, num_classes: int, device) -> Tuple[str
 @torch.no_grad()
 def predict(model: torch.nn.Module, loader: DataLoader, device) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     model.eval()
-    preds, labels, probs = [], [], []
+    preds: List[np.ndarray] = []
+    labels: List[np.ndarray] = []
+    probs: List[np.ndarray] = []
     for inputs, y in loader:
         out = model(inputs.to(device))
         probs.extend(torch.softmax(out, dim=1).cpu().numpy())
@@ -184,6 +193,11 @@ def main(argv=None) -> Dict[str, Any]:
     if not args.include_augmented and "is_augmented" in df.columns:
         df = df[df["is_augmented"] == 0]
     subset = "all images" if args.include_augmented else "originals only"
+    if args.limit is not None:
+        df = df.head(args.limit)
+        subset += f", limited to {len(df)}"
+        print(f"[WARN] --limit set: evaluating only {len(df)} images. For debugging only - "
+              f"do not use this ranking to pick a production champion.")
     print("=" * 60)
     print(f"Model selection on {len(df)} images ({subset}) | device: {device}")
     print(f"Checkpoints: {len(checkpoints)} in '{args.models_dir}' | rank by: ROC-AUC")

@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 try:
     import mlflow
 except ImportError:  # tracking is optional
-    mlflow = None
+    mlflow = None  # type: ignore[assignment]
 
 
 class Tracker:
