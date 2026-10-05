@@ -20,6 +20,7 @@ seaborn>=0.12.0
 
 # Testing
 pytest>=7.3.0
+httpx2>=2.0  # required by fastapi.testclient (tests/test_app.py); fastapi/starlette don't pull it in themselves
 
 # Experiment Tracking
 mlflow>=2.10.0
